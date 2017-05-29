@@ -32,12 +32,44 @@ class LoginController: UIViewController {
     }()
     
     func handleRegister(){
+        guard let email = emailTextField.text, let password = passwordTextField.text,
+            let name = nameTextField.text else {
+                print ("Form is not valid")
+                return
+        }
         
+        
+        Auth.auth().createUser(withEmail: email, password: password) { (user, error) in
+            if error != nil{
+                print(error!)
+                return
+            }
+            
+            
+            guard let uid = user?.uid else{
+                return
+            }
+            
+            // successfully authenticated user
+            let ref = Database.database().reference(fromURL: "https://gameofchats-e4245.firebaseio.com/")
+            let userRef = ref.child("Users").child(uid)
+            let values = ["name": name, "email": email]
+            userRef.updateChildValues(values, withCompletionBlock: { (err, ref) in
+                
+                if err != nil{
+                    print(err!)
+                    return
+                }
+                
+                print ("User saved into Firebase Database.")
+            })
+        }
     }
     
     let nameTextField: UITextField = {
         let textfield = UITextField()
         textfield.placeholder = "Name"
+        textfield.autocorrectionType = .no
         textfield.translatesAutoresizingMaskIntoConstraints = false
         return textfield
     }()
@@ -52,6 +84,7 @@ class LoginController: UIViewController {
     let emailTextField: UITextField = {
         let textfield = UITextField()
         textfield.placeholder = "Email address"
+        textfield.autocorrectionType = .no
         textfield.translatesAutoresizingMaskIntoConstraints = false
         return textfield
     }()
@@ -67,6 +100,7 @@ class LoginController: UIViewController {
         let textfield = UITextField()
         textfield.placeholder = "Password"
         textfield.isSecureTextEntry = true
+        textfield.autocorrectionType = .no
         textfield.translatesAutoresizingMaskIntoConstraints = false
         return textfield
     }()
@@ -79,6 +113,14 @@ class LoginController: UIViewController {
         return imageView
     }()
     
+    let loginRegisterSegmentedControl: UISegmentedControl = {
+        let segmentedControl = UISegmentedControl(items: ["Login","Register"])
+        segmentedControl.tintColor = .white
+        segmentedControl.selectedSegmentIndex = 1 //index in the array for the default selection
+        segmentedControl.translatesAutoresizingMaskIntoConstraints = false
+        return segmentedControl
+    }()
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -88,11 +130,20 @@ class LoginController: UIViewController {
         view.addSubview(inputContainerView)
         view.addSubview(loginRegisterButton)
         view.addSubview(profileImageView)
+        view.addSubview(loginRegisterSegmentedControl)
         
         setupInputsContainerView()
         setupLoginRegisterButton()
         setupProfileImageView()
+        setupLoginRegisterSegmentedControl()
         
+    }
+    
+    func setupLoginRegisterSegmentedControl(){
+        loginRegisterSegmentedControl.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
+        loginRegisterSegmentedControl.bottomAnchor.constraint(equalTo: inputContainerView.topAnchor, constant: -12).isActive = true
+        loginRegisterSegmentedControl.widthAnchor.constraint(equalTo: inputContainerView.widthAnchor).isActive = true
+        loginRegisterSegmentedControl.heightAnchor.constraint(equalToConstant: 36).isActive = true
     }
     
     
@@ -153,7 +204,7 @@ class LoginController: UIViewController {
     func setupProfileImageView() {
         // need x,y,width,height constraints for profile image view
         profileImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
-        profileImageView.bottomAnchor.constraint(equalTo: inputContainerView.topAnchor, constant: -12).isActive = true
+        profileImageView.bottomAnchor.constraint(equalTo: loginRegisterSegmentedControl.topAnchor, constant: -12).isActive = true
         profileImageView.widthAnchor.constraint(equalToConstant: 150).isActive = true
         profileImageView.heightAnchor.constraint(equalToConstant: 150).isActive = true
     }
