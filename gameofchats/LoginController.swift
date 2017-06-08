@@ -26,10 +26,30 @@ class LoginController: UIViewController {
         button.setTitle("Register", for: .normal)
         button.setTitleColor(UIColor.white, for: .normal)
         button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
-        button.addTarget(self, action: #selector(handleRegister), for: .touchUpInside)
+        button.addTarget(self, action: #selector(handleLoginRegister), for: .touchUpInside)
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
+    
+    func handleLoginRegister() {
+        if loginRegisterSegmentedControl.selectedSegmentIndex == 0 {
+            handleLogin()
+        } else {
+            handleRegister()
+        }
+    }
+    
+    func handleLogin() {
+        Auth.auth().signIn(withEmail: emailTextField.text!, password: passwordTextField.text!) { (user, error) in
+            if error != nil{
+                print(error!)
+                return
+            }
+            
+            // successfully logged in user.
+            self.dismiss(animated: true, completion: nil)
+        }
+    }
     
     func handleRegister(){
         guard let email = emailTextField.text, let password = passwordTextField.text,
@@ -62,6 +82,11 @@ class LoginController: UIViewController {
                 }
                 
                 print ("User saved into Firebase Database.")
+                
+                //dismiss viewcontroller when user has successfully been saved into DB
+                self.dismiss(animated: true, completion: { 
+                    return
+                })
             })
         }
     }
@@ -202,13 +227,11 @@ class LoginController: UIViewController {
         nameTextFieldHeightAnchor = nameTextField.heightAnchor.constraint(equalTo: inputContainerView.heightAnchor, multiplier: 1/3)
         nameTextFieldHeightAnchor?.isActive = true
         
-        
         // need x,y,width,height constraints for line separator under name text field
         nameSeparatorView.leftAnchor.constraint(equalTo: inputContainerView.leftAnchor).isActive = true
         nameSeparatorView.topAnchor.constraint(equalTo: nameTextField.bottomAnchor).isActive = true
         nameSeparatorView.widthAnchor.constraint(equalTo: inputContainerView.widthAnchor).isActive = true
         nameSeparatorView.heightAnchor.constraint(equalToConstant: 1).isActive = true
-
         
         // need x,y,width,height constraints for email text field
         emailTextField.leftAnchor.constraint(equalTo: inputContainerView.leftAnchor, constant: 12).isActive = true
@@ -216,8 +239,6 @@ class LoginController: UIViewController {
         emailTextField.widthAnchor.constraint(equalTo: inputContainerView.widthAnchor).isActive = true
         emailTextFieldHeightAnchor = emailTextField.heightAnchor.constraint(equalTo: inputContainerView.heightAnchor, multiplier: 1/3)
         emailTextFieldHeightAnchor?.isActive = true
-        
-        
         
         // need x,y,width,height constraints for line separator under email text field
         emailSeparatorView.leftAnchor.constraint(equalTo: inputContainerView.leftAnchor).isActive = true
@@ -231,7 +252,6 @@ class LoginController: UIViewController {
         passwordTextField.widthAnchor.constraint(equalTo: inputContainerView.widthAnchor).isActive = true
         passwordTextFieldHeghtAnchor =  passwordTextField.heightAnchor.constraint(equalTo: inputContainerView.heightAnchor, multiplier: 1/3)
         passwordTextFieldHeghtAnchor?.isActive = true
-
     }
     
     func setupLoginRegisterButton(){
